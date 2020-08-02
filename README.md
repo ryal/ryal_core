@@ -1,4 +1,6 @@
-# Ryal.Core
+# Ryal (Core)
+
+![Elixir CI](https://github.com/ryal/ryal_core/workflows/Elixir%20CI/badge.svg)
 
 **TODO: Add description**
 
