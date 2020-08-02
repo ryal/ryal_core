@@ -6,28 +6,22 @@ defmodule Ryal.Config do
   alias Ryal.PaymentGateways
   alias Ryal.Payments.PaymentMethod
 
-  @repo get_env(:ryal_core, :repo)
-  @user_module get_env(:ryal_core, :user_module, Ryal.Accounts.User)
-  @user_table get_env(:ryal_core, :user_table, "ryal_users")
-
-  @payment_gateway_modules get_env(:ryal_core, :payment_gateway_modules)
   @default_payment_gateway_modules %{
     bogus: PaymentGateways.Bogus,
     stripe: PaymentGateways.Stripe
   }
 
-  @payment_methods get_env(:ryal_core, :payment_methods)
   @default_payment_methods %{
     credit_card: PaymentMethod.CreditCard
   }
 
   @doc "List all of the payment gateways configured for the application."
   @spec payment_gateways() :: list
-  def payment_gateways, do: get_env(:ryal_core, :payment_gateways) || []
+  def payment_gateways, do: get_env(:ryal_core, :payment_gateways, [])
 
   @doc """
   This is the first payment gateway you listed for your application. We use the
-  first ateway you specify as the primary gateway, then the second as the
+  first gateway you specify as the primary gateway, then the second as the
   secondary, third is the tertiary, and so on... This way you know exactly how
   Ryal will fallback if your primary gateway isn't working.
   """
@@ -42,7 +36,10 @@ defmodule Ryal.Config do
 
   @spec payment_gateway_modules() :: %{}
   def payment_gateway_modules do
-    Map.merge(@default_payment_gateway_modules, @payment_gateway_modules || %{})
+    Map.merge(
+      @default_payment_gateway_modules,
+      get_env(:ryal_core, :payment_gateway_modules, %{})
+    )
   end
 
   @spec payment_gateway_module(atom) :: module | nil
@@ -50,13 +47,15 @@ defmodule Ryal.Config do
 
   @spec fallback_gateways() :: list
   def fallback_gateways do
-    [_default | fallbacks] = payment_gateways()
-    fallbacks
+    case payment_gateways() do
+      [] -> []
+      [_default | fallbacks] -> fallbacks
+    end
   end
 
   @spec payment_methods() :: map
   def payment_methods do
-    Map.merge(@default_payment_methods, @payment_methods || %{})
+    Map.merge(@default_payment_methods, get_env(:ryal_core, :payment_methods, %{}))
   end
 
   @spec payment_method(atom) :: module
@@ -66,11 +65,11 @@ defmodule Ryal.Config do
   def default_payment_methods, do: @default_payment_methods
 
   @spec repo() :: module
-  def repo, do: @repo
+  def repo, do: get_env(:ryal_core, :repo)
 
   @spec user_module() :: module
-  def user_module, do: @user_module
+  def user_module, do: get_env(:ryal_core, :user_module, Ryal.Accounts.User)
 
   @spec user_table() :: module
-  def user_table, do: @user_table
+  def user_table, do: get_env(:ryal_core, :user_table, "ryal_users")
 end
